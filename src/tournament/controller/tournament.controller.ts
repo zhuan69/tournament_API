@@ -1,3 +1,4 @@
+import { UseGuards } from '@nestjs/common';
 import {
   Controller,
   Get,
@@ -11,6 +12,7 @@ import {
   ParseIntPipe,
   Req,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Category } from 'src/shared/service/category.service';
 import { ApprovalParticipant, CreateTournament } from '../DTO/tournament.dto';
 import { TournamentService } from '../service/tournament.service';
@@ -23,11 +25,27 @@ export class TournamentController {
   async indexTournament(@Res() res, @Query('page', ParseIntPipe) page) {
     const resultIndex = await this.tournamentService.getIndexTournament(page);
     return res
-      .status(HttpStatus.FOUND)
+      .status(HttpStatus.OK)
+      .json({ message: 'Berhasil dapat index', resultIndex });
+  }
+  @Get(':comitteId')
+  @UseGuards(AuthGuard('jwt'))
+  async indexTournamentByDistrict(
+    @Res() res,
+    @Query('page', ParseIntPipe) page,
+    @Param('comitteId') comitteId,
+  ) {
+    const resultIndex = await this.tournamentService.getIndexTournamentByDistrict(
+      comitteId,
+      page,
+    );
+    return res
+      .status(HttpStatus.OK)
       .json({ message: 'Berhasil dapat index', resultIndex });
   }
 
   @Put('create/:comitteId')
+  @UseGuards(AuthGuard('jwt'))
   async createTournament(
     @Res() res,
     @Param('comitteId') comitteId,
@@ -43,9 +61,24 @@ export class TournamentController {
   }
 
   @Patch(':tournamentId/register/:userId')
+  @UseGuards(AuthGuard('jwt'))
   async paricipateTournament(@Res() res, @Req() req) {
     const { tournamentId, userId } = req.params;
-    const resultParticipate = await this.tournamentService.registerTournament(
+    const resultParticipate = await this.tournamentService.registerAsSoloTournament(
+      tournamentId,
+      userId,
+    );
+    return res.status(HttpStatus.ACCEPTED).json({
+      message: 'Success Participate in Tournament',
+      resultParticipate,
+    });
+  }
+
+  @Patch(':tournamentId/register-team/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async paricipateAsTeamTournament(@Res() res, @Req() req) {
+    const { tournamentId, userId } = req.params;
+    const resultParticipate = await this.tournamentService.registerAsTeamTournament(
       tournamentId,
       userId,
     );
@@ -56,6 +89,7 @@ export class TournamentController {
   }
 
   @Get('waitinglist/:tournamentId')
+  @UseGuards(AuthGuard('jwt'))
   async getWaitingListParticipant(
     @Res() res,
     @Param('tournamentId') tournamentId,
@@ -63,19 +97,36 @@ export class TournamentController {
     const resultWaitingList = await this.tournamentService.getWaitingListParticipants(
       tournamentId,
     );
-    return res.status(HttpStatus.FOUND).json({
+    return res.status(HttpStatus.OK).json({
       message: 'Berhasil dapat data waiting list peserta',
       resultWaitingList,
     });
   }
 
-  @Patch('/:tournamentId/approval')
-  async updateApprovalParticipant(
+  @Patch('/:tournamentId/userapproval')
+  @UseGuards(AuthGuard('jwt'))
+  async updateUserApprovalParticipant(
     @Res() res,
     @Param('tournamentId') tournamentId,
     @Body() approval: ApprovalParticipant,
   ) {
-    const resultUpdate = await this.tournamentService.updateApprovalPariticipant(
+    const resultUpdate = await this.tournamentService.updateUserApprovalPariticipant(
+      tournamentId,
+      approval,
+    );
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Berhasil mengupdate approval', resultUpdate });
+  }
+
+  @Patch('/:tournamentId/teamapproval')
+  @UseGuards(AuthGuard('jwt'))
+  async updateTeamApprovalPariticipant(
+    @Res() res,
+    @Param('tournamentId') tournamentId,
+    @Body() approval: ApprovalParticipant,
+  ) {
+    const resultUpdate = await this.tournamentService.updateTeamApprovalParticipant(
       tournamentId,
       approval,
     );
@@ -85,11 +136,12 @@ export class TournamentController {
   }
 
   @Get('category/:comitteId')
+  @UseGuards(AuthGuard('jwt'))
   async getAvailableCategory(@Res() res, @Param('comitteId') comitteId) {
     const resultAvailavleCategory = await this.tournamentService.getAvailableCategory(
       comitteId,
     );
-    return res.status(HttpStatus.FOUND).json({
+    return res.status(HttpStatus.OK).json({
       message: 'Berhasil dapat data category yang tersedia',
       resultAvailavleCategory,
     });
@@ -100,12 +152,13 @@ export class TournamentController {
     const resultDetailTournament = await this.tournamentService.getDetailTournament(
       tournamentId,
     );
-    return res.status(HttpStatus.FOUND).json({
+    return res.status(HttpStatus.OK).json({
       message: 'Berhasil dapat detail tournament',
       resultDetailTournament,
     });
   }
   @Put('category')
+  @UseGuards(AuthGuard('jwt'))
   async createCategory(@Res() res, @Body() category: Category) {
     const resultCreateCategory = await this.tournamentService.createCategoryTournament(
       category,

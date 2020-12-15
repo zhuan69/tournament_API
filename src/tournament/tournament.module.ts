@@ -14,5 +14,6 @@ import { TournamentService } from './service/tournament.service';
   ],
   controllers: [TournamentController],
   providers: [TournamentService],
+  exports: [TournamentService],
 })
 export class TournamentModule {}

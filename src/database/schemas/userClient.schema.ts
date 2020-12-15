@@ -61,4 +61,10 @@ userClientSchema.pre<ClientModel>('save', async function(next) {
   this.password = hashing;
   next();
 });
+userClientSchema.pre<ClientModel>('findOneAndUpdate', async function(next) {
+  const saltNumber = await genSalt(12);
+  const hashing = await hash(this.password, saltNumber);
+  this.password = hashing;
+  next();
+});
 userClientSchema.index({ username: 'text' });

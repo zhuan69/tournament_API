@@ -1,8 +1,5 @@
-export enum ApprovalStatus {
-  notRegister = 'Not Register',
-  approved = 'Approved',
-  rejected = 'Rejected',
-}
+import { ApprovalStatus } from 'src/shared/DTO/approval.enum';
+
 enum tournamentType {
   FreeForAll = 'FreeForAll',
   Eliminination = 'Elimination',
@@ -11,10 +8,18 @@ export interface CreateTournament {
   name: string;
   category: string;
   tournamentType: tournamentType;
-  ageRange: number[];
+  ageRange: string;
+  prizePool: PrizePoolTournament;
 }
 
 export interface ApprovalParticipant {
-  userId: string;
+  userId?: string;
+  teamId?: string;
   approval: ApprovalStatus;
+}
+
+interface PrizePoolTournament {
+  firstPrize: number;
+  secondPrize: number;
+  thirdPrize: number;
 }

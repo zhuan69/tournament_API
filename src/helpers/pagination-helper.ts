@@ -35,6 +35,8 @@ export class Pagination {
     };
     result.data = await model
       .find(options)
+      .populate('category')
+      .populate('participant')
       .limit(limit)
       .skip(startIndex)
       .exec();

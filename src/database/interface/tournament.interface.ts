@@ -10,6 +10,14 @@ export interface TournamentModel extends Document {
   tournamentType: tournamentType;
   participants?: string[];
   waitingList?: string[];
+  ageRage: string;
   subDistrict: string;
+  registerModel: string;
+  prizePool: PrizePoolTournament;
   createdBy: string;
+}
+export interface PrizePoolTournament {
+  firstPrize: number;
+  secondPrize: number;
+  thirdPrize: number;
 }

@@ -24,7 +24,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
             user: '43d88636b5146d',
             pass: '4ee6eb3902980b',
           },
-          defaults: { from: '"s1mple-Tournaments"' },
         },
       }),
     }),

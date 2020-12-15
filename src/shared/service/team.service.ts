@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TeamModel } from 'src/database/interface/team.interface';
 import { TeamRegister } from 'src/team/DTO/team.dto';
+import { ApprovalStatus } from '../DTO/approval.enum';
 
 @Injectable()
 export class TeamService {
@@ -17,7 +18,7 @@ export class TeamService {
         'Nama team yang anda masukkan sudah terpakai',
       );
     const resultRegister = await new this.teamModel({
-      teamBody,
+      teamName: teamBody.teamName,
       memberTeam: userId,
     });
     return resultRegister.save();
@@ -33,11 +34,29 @@ export class TeamService {
       return updateTeamMember;
     }
   }
-  async searchTeam(search: string): Promise<TeamModel[]> {
+  async searchTeam(search: string): Promise<any> {
     const searchTeamName = await this.teamModel
       .find({ $text: { $search: search, $caseSensitive: false } })
       .populate('memberTeam')
       .exec();
     return searchTeamName;
+  }
+
+  async getDataTeamByUserId(userId: string): Promise<TeamModel> {
+    const getDetailTeam = await this.teamModel
+      .findOne({ memberTeam: userId })
+      .exec();
+    if (!getDetailTeam) throw new BadRequestException('Anda belum masuk team');
+    return getDetailTeam;
+  }
+
+  async updateApprovalTeamStatus(
+    teamId: string,
+    approval: ApprovalStatus,
+  ): Promise<TeamModel> {
+    const updateApproval = await this.teamModel
+      .findByIdAndUpdate(teamId, { $set: { approval: approval } })
+      .exec();
+    return updateApproval;
   }
 }

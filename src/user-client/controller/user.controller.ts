@@ -4,10 +4,15 @@ import {
   Get,
   HttpStatus,
   Param,
+  Patch,
+  Post,
   Put,
   Query,
+  Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 import {
   AdminRegister,
@@ -33,6 +38,25 @@ export class UserController {
       .status(HttpStatus.FOUND)
       .json({ message: 'Berhasil dapat username' }, resultSearch);
   }
+  @Post('forget-password')
+  async forgetPasswordUser(@Req() req, @Res() res) {
+    const resultForgetPassword = await this.userService.forgotPassword(
+      req.body.email,
+    );
+    return res.status(HttpStatus.OK).json({ resultForgetPassword });
+  }
+  @Patch('update-profile/:id')
+  async updateProfileUser(
+    @Res() res,
+    @Body() updateBody: ClientRegister,
+    @Param('id') userId: string,
+  ) {
+    const resultUpdateProfile = await this.userService.updateProfile(
+      userId,
+      updateBody,
+    );
+    return res.status(HttpStatus.OK).json({ resultUpdateProfile });
+  }
 }
 
 @Controller('admin')
@@ -47,6 +71,7 @@ export class AdminController {
       .json({ message: 'Berhasil Register', resultRegister });
   }
   @Put(':id/register/comitte')
+  @UseGuards(AuthGuard('jwt'))
   async comitteRegister(
     @Res() res,
     @Param('id') adminId,

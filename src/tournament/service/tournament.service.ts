@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { TournamentModel } from 'src/database/interface/tournament.interface';
 import { Pagination } from 'src/helpers/pagination-helper';
 import { Category, CategoryService } from 'src/shared/service/category.service';
+import { TeamService } from 'src/shared/service/team.service';
 import { UserService } from 'src/shared/service/user.service';
 import { CreateTournament, ApprovalParticipant } from '../DTO/tournament.dto';
 
@@ -13,6 +14,7 @@ export class TournamentService {
     @InjectModel('Tournament') private tournamentModel: Model<TournamentModel>,
     private categoryService: CategoryService,
     private userService: UserService,
+    private teamService: TeamService,
   ) {}
 
   async getIndexTournament(page: number): Promise<TournamentModel[]> {
@@ -23,11 +25,30 @@ export class TournamentService {
     return indexTournament;
   }
 
+  async getIndexTournamentByDistrict(
+    comitteId: string,
+    page: number,
+  ): Promise<TournamentModel[]> {
+    const getDataComitte = await this.userService.getDetailAdmin(comitteId);
+    const indexTournament = await Pagination.paginatedResult(
+      this.tournamentModel,
+      page,
+      { subDistrict: getDataComitte.region.subDistrict },
+    );
+    return indexTournament;
+  }
+
   async createTournament(
     comitteId: string,
     tournamentBody: CreateTournament,
   ): Promise<TournamentModel> {
-    const { name, category, tournamentType, ageRange } = tournamentBody;
+    const {
+      name,
+      category,
+      tournamentType,
+      ageRange,
+      prizePool,
+    } = tournamentBody;
     const categoryResult = await this.categoryService.getCategoryByName(
       category,
     );
@@ -42,21 +63,47 @@ export class TournamentService {
       tournamentType: tournamentType,
       ageRange: ageRange,
       subDistrict: subDistrict,
+      prizePool: prizePool,
       createdBy: comitteId,
     });
 
     return newTournament.save();
   }
 
-  async registerTournament(tournamentId: string, userId: string): Promise<any> {
-    const resultRegister = await this.tournamentModel
+  async registerAsSoloTournament(
+    tournamentId: string,
+    userId: string,
+  ): Promise<any> {
+    const resultRegisterSolo = await this.tournamentModel
       .findByIdAndUpdate(
         tournamentId,
-        { $push: { waitingList: userId } },
+        { $push: { waitingList: userId }, $set: { registerModel: 'Client' } },
         { upsert: true },
       )
       .exec();
-    return resultRegister;
+    await this.filterDuplicateSoloRegister(userId);
+    return resultRegisterSolo;
+  }
+
+  async registerAsTeamTournament(
+    tournamentId: string,
+    userId: string,
+  ): Promise<TournamentModel> {
+    const getDataTeamByUser = await this.teamService.getDataTeamByUserId(
+      userId,
+    );
+    await this.filterDuplicateTeamRegister(getDataTeamByUser._id);
+    const resultRegisterTeam = await this.tournamentModel
+      .findByIdAndUpdate(
+        tournamentId,
+        {
+          $push: { waitingList: getDataTeamByUser._id },
+          $set: { registerModel: 'Team' },
+        },
+        { upsert: true },
+      )
+      .exec();
+    return resultRegisterTeam;
   }
 
   async getDetailTournament(tournamentId: string): Promise<TournamentModel> {
@@ -94,16 +141,28 @@ export class TournamentService {
   async getWaitingListParticipants(tournamentId: string): Promise<any> {
     const resultWaitingList = await this.tournamentModel
       .findById(tournamentId)
+      .populate('participants')
       .populate('waitingList')
       .exec();
     return resultWaitingList;
   }
 
-  async updateApprovalPariticipant(
+  async updateUserApprovalPariticipant(
     tournamentId: string,
     approvalBody: ApprovalParticipant,
   ): Promise<any> {
-    const resultUpdateApproval = await this.filterApprovalParticipant(
+    const resultUpdateApproval = await this.filterSoloApprovalParticipant(
+      tournamentId,
+      approvalBody,
+    );
+    return resultUpdateApproval;
+  }
+
+  async updateTeamApprovalParticipant(
+    tournamentId,
+    approvalBody: ApprovalParticipant,
+  ): Promise<any> {
+    const resultUpdateApproval = await this.filterTeamApprovalParticipant(
       tournamentId,
       approvalBody,
     );
@@ -117,7 +176,65 @@ export class TournamentService {
     return createCategory;
   }
 
-  private async filterApprovalParticipant(
+  private async filterDuplicateSoloRegister(userId: string) {
+    const filterUser = await this.tournamentModel
+      .findOne({ $or: [{ waitingList: userId }, { participants: userId }] })
+      .exec();
+    if (filterUser)
+      throw new BadRequestException(
+        `Anda sudah mendaftar tournament di ${filterUser.name} dan tidak bisa mendaftar lebih dari 2 tournament secara bersaaman`,
+      );
+  }
+
+  private async filterDuplicateTeamRegister(teamId: string) {
+    const filterTeam = await this.tournamentModel
+      .findOne({ $or: [{ participants: teamId }, { waitingList: teamId }] })
+      .exec();
+    if (filterTeam)
+      throw new BadRequestException(
+        `Team anda sudah mendaftar tournament di ${filterTeam.name} dan tidak bisa mendaftar lebih dari 2 tournament secara bersaaman`,
+      );
+  }
+
+  private async filterTeamApprovalParticipant(
+    tournamentId: string,
+    approvalBody: ApprovalParticipant,
+  ): Promise<any> {
+    const { teamId, approval } = approvalBody;
+    const updateToTeam = await this.teamService.updateApprovalTeamStatus(
+      teamId,
+      approval,
+    );
+    if (approval === 'Rejected') {
+      const updateWaitingList = await this.tournamentModel
+        .findByIdAndUpdate(
+          tournamentId,
+          { $pull: { waitingList: updateToTeam._id } },
+          { upsert: true },
+        )
+        .exec();
+      return {
+        updateWaitingList,
+        notification: `Pendaftaran Team anda pada tournament ${updateWaitingList.name} telah di reject oleh panitia`,
+      };
+    }
+    const updateParticipants = await this.tournamentModel
+      .findByIdAndUpdate(
+        tournamentId,
+        {
+          $pull: { waitingList: updateToTeam._id },
+          $push: { participants: updateToTeam._id },
+        },
+        { upsert: true },
+      )
+      .exec();
+    return {
+      updateParticipants,
+      notification: `Pendaftaran Team anda pada tournament ${updateParticipants.name} telah di approve oleh panitia`,
+    };
+  }
+
+  private async filterSoloApprovalParticipant(
     tournamentId: string,
     approvalBody: ApprovalParticipant,
   ): Promise<any> {
@@ -134,8 +251,7 @@ export class TournamentService {
       );
       return {
         updateWaitingList,
-        notification:
-          'Pendaftaran tournament anda telah di reject oleh panitia',
+        notification: `Pendaftaran tournament anda pada tournament ${updateWaitingList.name} telah di reject oleh panitia`,
       };
     }
     const updateParticipants = await this.tournamentModel.findByIdAndUpdate(
@@ -148,7 +264,7 @@ export class TournamentService {
     );
     return {
       updateParticipants,
-      notification: 'Pendaftaran tournament anda telah di approve oleh panitia',
+      notification: `Pendaftaran tournament anda pada tournament ${updateParticipants.name} telah di approve oleh panitia`,
     };
   }
 
@@ -157,11 +273,12 @@ export class TournamentService {
   ): Promise<any> {
     const detailTournament = await this.tournamentModel
       .findById(tournamentId)
+      .populate('category')
       .populate('participants')
       .populate('createdBy')
       .exec();
     const maxParticipants = 100;
-    if (!detailTournament.participants) {
+    if (detailTournament.participants === null) {
       return {
         data: detailTournament,
         availablity: maxParticipants,

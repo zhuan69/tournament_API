@@ -1,4 +1,5 @@
-import { Controller, Body, Post } from '@nestjs/common';
+import { Controller, Body, Post, Get, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthLogin } from 'src/shared/DTO/AuthLogin.dto';
 import { UserService } from 'src/shared/service/user.service';
 import { Payload } from '../interface/payload.interface';
@@ -10,12 +11,20 @@ export class AuthController {
     private userService: UserService,
     private authService: AuthService,
   ) {}
+  //Test Purpose
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  async testJwT() {
+    return { works: 'its working yeay!' };
+  }
 
   @Post('client/login')
   async clientLogin(@Body() loginBody: AuthLogin) {
     const userLogin = await this.userService.clientLoginValidation(loginBody);
+    const fullname = `${userLogin.firstName} ${userLogin.lastName}`;
     const payload: Payload = {
       userId: userLogin._id,
+      fullname: fullname,
     };
     const token = await this.authService.signPayload(payload);
     return { token, payload };
@@ -23,8 +32,10 @@ export class AuthController {
   @Post('admin/login')
   async adminLogin(@Body() loginBody: AuthLogin) {
     const adminLogin = await this.userService.adminLoginValidation(loginBody);
+    const fullname = `${adminLogin.firstName} ${adminLogin.lastName}`;
     const payload: Payload = {
       userId: adminLogin._id,
+      fullname: fullname,
       role: adminLogin.role,
     };
     const token = await this.authService.signPayload(payload);

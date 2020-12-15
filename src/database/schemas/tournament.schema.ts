@@ -19,20 +19,41 @@ export const tournamentSchema = new mongoose.Schema(
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client',
         maxlength: 100,
+        refPath: 'registerModel',
       },
     ],
     waitingList: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Client',
+        refPath: 'registerModel',
       },
     ],
-    ageRange: { type: [{ type: Number, required: true }] },
+    registerModel: {
+      type: String,
+      enum: ['Client', 'Team'],
+    },
+    ageRange: { type: String, required: true },
     subDistrict: {
       type: String,
       required: true,
+    },
+    prizePool: {
+      firstPrize: {
+        type: Number,
+        min: 0,
+        required: true,
+      },
+      secondPrize: {
+        type: Number,
+        min: 0,
+        required: true,
+      },
+      thirdPrize: {
+        type: Number,
+        min: 0,
+        required: true,
+      },
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

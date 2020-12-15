@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { compare } from 'bcrypt';
@@ -8,8 +9,7 @@ import { AdminModel } from 'src/database/interface/userAdmin.interface';
 import { ClientModel } from '../../database/interface/userClient.interface';
 import { AuthLogin } from '../DTO/AuthLogin.dto';
 import { AdminRegister, ClientRegister } from '../DTO/user-register.dto';
-import { ApprovalStatus } from 'src/tournament/DTO/tournament.dto';
-import { MailerService } from '@nestjs-modules/mailer';
+import { ApprovalStatus } from '../DTO/approval.enum';
 
 @Injectable()
 export class UserService {
@@ -18,12 +18,50 @@ export class UserService {
     @InjectModel('Admin') private adminModel: Model<AdminModel>,
     private mailerService: MailerService,
   ) {}
+  async forgotPassword(email: string): Promise<any> {
+    const userData = await this.clientModel.findOne({ email: email }).exec();
+    if (!userData) throw new BadRequestException('Email telah dikirim');
+    const token = sign({ userId: userData._id }, process.env.SECRET_KEY);
+    await this.clientModel
+      .findOneAndUpdate(
+        { email: email },
+        { $set: { resetPasswordToken: token } },
+        { upsert: true },
+      )
+      .exec();
+    const option = {
+      to: email,
+      from: '"s1mple-Tournaments"<s1mple-tournamments@tournament.com>',
+      subject: 'Reset link password',
+      html: `<p>Hello ${userData.username}, here link for reset your password <a href=${token}>Reset Password</a></p>`,
+    };
+    this.mailerService
+      .sendMail(option)
+      .then(res => console.log(res))
+      .catch(err => console.log(err));
+    return {
+      message: 'Link untuk reset password sudah di kirim ke email anda',
+    };
+  }
   async updateProfile(
     userId: string,
     userUpdate: ClientRegister,
   ): Promise<ClientModel> {
+    const {
+      firstName,
+      lastName,
+      email,
+      username,
+      password,
+      age,
+      team,
+    } = userUpdate;
     const updateUserInfo = await this.clientModel
-      .findByIdAndUpdate(userId, { userUpdate }, { upsert: true })
+      .findByIdAndUpdate(
+        userId,
+        { $set: { firstName, lastName, email, username, password, age, team } },
+        { upsert: true },
+      )
       .exec();
     return updateUserInfo;
   }
