@@ -37,6 +37,7 @@ export class Pagination {
       .find(options)
       .populate('category')
       .populate('participant')
+      .populate('createdBy')
       .limit(limit)
       .skip(startIndex)
       .exec();
