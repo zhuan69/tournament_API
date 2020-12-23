@@ -48,6 +48,11 @@ export class Pagination {
         .skip(startIndex)
         .exec();
     }
+    result.data = await model
+      .find()
+      .limit(limit)
+      .skip(startIndex)
+      .exec();
     return result;
   }
 }
