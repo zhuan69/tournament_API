@@ -4,17 +4,17 @@ export class Pagination {
   static async paginatedResult(
     model: Model<any>,
     page: number,
-    options?: any,
+    ...args
   ): Promise<any> {
     const limit = 10;
     const startIndex: number = (page - 1) * limit;
     const endIndex: number = page * limit;
+    const result: any = {};
     const totalDocument = await model
-      .find(options)
+      .find(args[0])
       .countDocuments()
       .exec();
     const totalPage = Math.floor(totalDocument / limit);
-    const result: any = {};
     if (endIndex < totalDocument) {
       result.next = {
         page: page + 1,
@@ -33,14 +33,21 @@ export class Pagination {
       currentPage: page,
       limit: limit,
     };
-    result.data = await model
-      .find(options)
-      .populate('category')
-      .populate('participant')
-      .populate('createdBy')
-      .limit(limit)
-      .skip(startIndex)
-      .exec();
+    if (args.length === 1) {
+      result.data = await model
+        .find()
+        .sort(args[0])
+        .limit(limit)
+        .skip(startIndex)
+        .exec();
+    } else if (args.length === 2) {
+      result.data = await model
+        .find(args[0])
+        .sort(args[1])
+        .limit(limit)
+        .skip(startIndex)
+        .exec();
+    }
     return result;
   }
 }

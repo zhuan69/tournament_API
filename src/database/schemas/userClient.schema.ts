@@ -1,4 +1,4 @@
-import { genSalt, hash } from 'bcrypt';
+import { hash } from 'bcrypt';
 import * as mongoose from 'mongoose';
 import { ClientModel } from '../interface/userClient.interface';
 
@@ -25,8 +25,13 @@ export const userClientSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  age: {
+  phone: {
     type: Number,
+    required: true,
+    unique: true,
+  },
+  birthday: {
+    type: Date,
     required: true,
   },
   resetPasswordToken: {
@@ -47,6 +52,7 @@ export const userClientSchema = new mongoose.Schema({
   score: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Score',
+    autopopulate: true,
   },
   bracketStatus: {
     type: String,
@@ -56,15 +62,18 @@ export const userClientSchema = new mongoose.Schema({
 });
 
 userClientSchema.pre<ClientModel>('save', async function(next) {
-  const saltNumber = await genSalt(12);
-  const hashing = await hash(this.password, saltNumber);
+  const hashing = await hashingPassword(12, this.password);
   this.password = hashing;
   next();
 });
 userClientSchema.pre<ClientModel>('findOneAndUpdate', async function(next) {
-  const saltNumber = await genSalt(12);
-  const hashing = await hash(this.password, saltNumber);
+  const hashing = await hashingPassword(12, this.password);
   this.password = hashing;
   next();
 });
+async function hashingPassword(saltNumber, password) {
+  const hashing = await hash(password, saltNumber);
+  return hashing;
+}
+
 userClientSchema.index({ username: 'text' });

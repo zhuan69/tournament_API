@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -10,6 +14,7 @@ import { ClientModel } from '../../database/interface/userClient.interface';
 import { AuthLogin } from '../DTO/AuthLogin.dto';
 import { AdminRegister, ClientRegister } from '../DTO/user-register.dto';
 import { ApprovalStatus } from '../DTO/approval.enum';
+import { Pagination } from 'src/helpers/pagination-helper';
 
 @Injectable()
 export class UserService {
@@ -52,14 +57,26 @@ export class UserService {
       lastName,
       email,
       username,
+      oldPassword,
       password,
-      age,
+      birthday,
       team,
     } = userUpdate;
+    await this.oldPasswordVerify(userId, oldPassword);
     const updateUserInfo = await this.clientModel
       .findByIdAndUpdate(
         userId,
-        { $set: { firstName, lastName, email, username, password, age, team } },
+        {
+          $set: {
+            firstName,
+            lastName,
+            email,
+            username,
+            password,
+            birthday,
+            team,
+          },
+        },
         { upsert: true },
       )
       .exec();
@@ -112,9 +129,13 @@ export class UserService {
     });
     return resultCreate.save();
   }
-  async getIndexAdmin(): Promise<AdminModel[]> {
-    const resultIndex = await this.adminModel.find().exec();
-    return resultIndex;
+  async getIndexLurah(page: number): Promise<AdminModel[]> {
+    const indexDataLurah = await Pagination.paginatedResult(
+      this.adminModel,
+      page,
+      { role: 'Headman' },
+    );
+    return indexDataLurah;
   }
   async getDetailAdmin(adminId: string): Promise<AdminModel> {
     const resultDetail = await this.adminModel.findById(adminId).exec();
@@ -152,5 +173,12 @@ export class UserService {
     if (!verifyPassword)
       throw new BadRequestException('Username atau password salah');
     return resultRecord;
+  }
+
+  private async oldPasswordVerify(userId: string, password: string) {
+    const resultRecord = await this.clientModel.findById(userId);
+    if (!resultRecord) throw new NotFoundException('Data tidak ada :(');
+    const oldPassword = await compare(password, resultRecord.password);
+    if (!oldPassword) throw new BadRequestException('Password lama anda salah');
   }
 }

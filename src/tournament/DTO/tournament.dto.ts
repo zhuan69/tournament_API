@@ -9,6 +9,14 @@ export interface CreateTournament {
   category: string;
   tournamentType: tournamentType;
   ageRange: string;
+  rules: string;
+  prizePool: PrizePoolTournament;
+  permalink: string;
+}
+
+export interface EditInfoTournament {
+  name: string;
+  rules: string;
   prizePool: PrizePoolTournament;
 }
 

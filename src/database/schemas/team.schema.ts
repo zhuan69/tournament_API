@@ -13,6 +13,7 @@ export const teamSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Client',
         maxlength: 5,
+        autopopulate: true,
       },
     ],
     approval: {
@@ -24,6 +25,7 @@ export const teamSchema = new mongoose.Schema(
     score: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Score',
+      autopopulate: true,
     },
     bracketStatus: { type: String, required: true, default: 'Qualifier' },
   },

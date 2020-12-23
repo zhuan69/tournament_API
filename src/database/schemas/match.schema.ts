@@ -12,7 +12,13 @@ export const matchSchema = new mongoose.Schema({
   },
   versus: {
     data: {
-      match: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Client' }],
+      match: [
+        { type: mongoose.Schema.Types.ObjectId, refPath: 'registerModel' },
+      ],
+      registerModel: {
+        type: String,
+        enum: ['Client', 'Team'],
+      },
       results: {
         type: Array,
       },

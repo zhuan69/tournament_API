@@ -6,7 +6,11 @@ import { Pagination } from 'src/helpers/pagination-helper';
 import { Category, CategoryService } from 'src/shared/service/category.service';
 import { TeamService } from 'src/shared/service/team.service';
 import { UserService } from 'src/shared/service/user.service';
-import { CreateTournament, ApprovalParticipant } from '../DTO/tournament.dto';
+import {
+  CreateTournament,
+  ApprovalParticipant,
+  EditInfoTournament,
+} from '../DTO/tournament.dto';
 
 @Injectable()
 export class TournamentService {
@@ -47,14 +51,13 @@ export class TournamentService {
       category,
       tournamentType,
       ageRange,
+      rules,
       prizePool,
+      permalink,
     } = tournamentBody;
     const categoryResult = await this.categoryService.getCategoryByName(
       category,
     );
-    const filterComitte = await this.getTournamentByCreated(comitteId);
-    if (filterComitte)
-      throw new BadRequestException('Comitte can only create 1 tournament');
     const getDataAdmin = await this.userService.getDetailAdmin(comitteId);
     const { subDistrict } = getDataAdmin.region;
     const newTournament = await new this.tournamentModel({
@@ -63,11 +66,28 @@ export class TournamentService {
       tournamentType: tournamentType,
       ageRange: ageRange,
       subDistrict: subDistrict,
+      rules: rules,
       prizePool: prizePool,
       createdBy: comitteId,
+      permalink: permalink,
     });
 
     return newTournament.save();
+  }
+
+  async editInfoTournament(
+    tournamentId: string,
+    editTournamentBody: EditInfoTournament,
+  ): Promise<TournamentModel> {
+    const { name, rules, prizePool } = editTournamentBody;
+    const editTournament = await this.tournamentModel
+      .findByIdAndUpdate(
+        tournamentId,
+        { $set: { name: name, rules: rules, prizePool: prizePool } },
+        { upsert: true },
+      )
+      .exec();
+    return editTournament;
   }
 
   async registerAsSoloTournament(
@@ -106,8 +126,10 @@ export class TournamentService {
     return resultRegisterTeam;
   }
 
-  async getDetailTournament(tournamentId: string): Promise<TournamentModel> {
-    const resultDetail = await this.filterAvailablityParticipants(tournamentId);
+  async getDetailTournament(tournamentLink: string): Promise<TournamentModel> {
+    const resultDetail = await this.filterAvailablityParticipants(
+      tournamentLink,
+    );
     return resultDetail;
   }
 
@@ -141,10 +163,15 @@ export class TournamentService {
   async getWaitingListParticipants(tournamentId: string): Promise<any> {
     const resultWaitingList = await this.tournamentModel
       .findById(tournamentId)
-      .populate('participants')
-      .populate('waitingList')
       .exec();
     return resultWaitingList;
+  }
+
+  async getSortTournamentAtoZ(page: number): Promise<any> {
+    const sortFromAZ = Pagination.paginatedResult(this.tournamentModel, page, {
+      name: 1,
+    });
+    return sortFromAZ;
   }
 
   async updateUserApprovalPariticipant(
@@ -269,13 +296,10 @@ export class TournamentService {
   }
 
   private async filterAvailablityParticipants(
-    tournamentId: string,
+    tournamentLink: string,
   ): Promise<any> {
     const detailTournament = await this.tournamentModel
-      .findById(tournamentId)
-      .populate('category')
-      .populate('participants')
-      .populate('createdBy')
+      .findOne({ permalink: tournamentLink })
       .exec();
     const maxParticipants = 100;
     if (detailTournament.participants === null) {
@@ -308,8 +332,6 @@ export class TournamentService {
       for (let j = 0; j < indexDataTournament.length; j++) {
         const checkCategoryIsUsed =
           indexDataTournament[j].category === indexDataCategory[i]._id;
-        console.log(checkCategoryIsUsed);
-
         if (checkCategoryIsUsed) {
           result = {
             index: i,
@@ -318,8 +340,6 @@ export class TournamentService {
         }
       }
     }
-    console.log(result);
-
     return result;
   }
 }

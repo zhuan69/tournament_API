@@ -12,7 +12,8 @@ export interface ClientModel extends Document {
   email: string;
   username: string;
   password: string;
-  age: number;
+  birthday: Date;
+  phone: number;
   resetPasswordToken?: string;
   team?: string;
   approval?: ApprovalStatus;

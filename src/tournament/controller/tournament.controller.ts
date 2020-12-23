@@ -28,6 +28,15 @@ export class TournamentController {
       .status(HttpStatus.OK)
       .json({ message: 'Berhasil dapat index', resultIndex });
   }
+  @Get('sort')
+  async indexSortTournament(@Res() res, @Query('page', ParseIntPipe) page) {
+    const resultIndex = await this.tournamentService.getSortTournamentAtoZ(
+      page,
+    );
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Berhasil dapat sort index', resultIndex });
+  }
   @Get(':comitteId')
   @UseGuards(AuthGuard('jwt'))
   async indexTournamentByDistrict(
@@ -147,10 +156,13 @@ export class TournamentController {
     });
   }
 
-  @Get('detail/:tournamentId')
-  async getDetailTournament(@Res() res, @Param('tournamentId') tournamentId) {
+  @Get('detail/:tournamentLink')
+  async getDetailTournament(
+    @Res() res,
+    @Param('tournamentLink') tournamentLink,
+  ) {
     const resultDetailTournament = await this.tournamentService.getDetailTournament(
-      tournamentId,
+      tournamentLink,
     );
     return res.status(HttpStatus.OK).json({
       message: 'Berhasil dapat detail tournament',

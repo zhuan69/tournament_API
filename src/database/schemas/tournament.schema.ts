@@ -10,6 +10,7 @@ export const tournamentSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
+      autopopulate: true,
     },
     tournamentType: {
       type: String,
@@ -21,12 +22,14 @@ export const tournamentSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         maxlength: 100,
         refPath: 'registerModel',
+        autopopulate: true,
       },
     ],
     waitingList: [
       {
         type: mongoose.Schema.Types.ObjectId,
         refPath: 'registerModel',
+        autopopulate: true,
       },
     ],
     registerModel: {
@@ -35,6 +38,10 @@ export const tournamentSchema = new mongoose.Schema(
     },
     ageRange: { type: String, required: true },
     subDistrict: {
+      type: String,
+      required: true,
+    },
+    rules: {
       type: String,
       required: true,
     },
@@ -58,6 +65,11 @@ export const tournamentSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Admin',
+      autopopulate: true,
+    },
+    permalink: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true },

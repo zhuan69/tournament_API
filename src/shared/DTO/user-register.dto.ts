@@ -3,8 +3,10 @@ export interface ClientRegister {
   lastName: string;
   email?: string;
   username: string;
+  oldPassword?: string;
   password: string;
-  age: number;
+  birthday: Date;
+  phone: number;
   team?: string;
 }
 
