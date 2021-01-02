@@ -5,7 +5,6 @@ export const tournamentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +14,6 @@ export const tournamentSchema = new mongoose.Schema(
     tournamentType: {
       type: String,
       enum: ['FreeForAll', 'Elimination'],
-      required: true,
     },
     participants: [
       {
@@ -39,27 +37,22 @@ export const tournamentSchema = new mongoose.Schema(
     ageRange: { type: String, required: true },
     subDistrict: {
       type: String,
-      required: true,
     },
     rules: {
       type: String,
-      required: true,
     },
     prizePool: {
       firstPrize: {
         type: Number,
         min: 0,
-        required: true,
       },
       secondPrize: {
         type: Number,
         min: 0,
-        required: true,
       },
       thirdPrize: {
         type: Number,
         min: 0,
-        required: true,
       },
     },
     createdBy: {
@@ -69,7 +62,6 @@ export const tournamentSchema = new mongoose.Schema(
     },
     permalink: {
       type: String,
-      required: true,
     },
   },
   { timestamps: true },

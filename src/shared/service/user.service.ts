@@ -14,7 +14,7 @@ import { ClientModel } from '../../database/interface/userClient.interface';
 import { AuthLogin } from '../DTO/AuthLogin.dto';
 import { AdminRegister, ClientRegister } from '../DTO/user-register.dto';
 import { ApprovalStatus } from '../DTO/approval.enum';
-import { Pagination } from 'src/helpers/pagination-helper';
+import { Pagination } from 'src/helpers/pagination-helper.service';
 
 @Injectable()
 export class UserService {
@@ -22,6 +22,7 @@ export class UserService {
     @InjectModel('Client') private clientModel: Model<ClientModel>,
     @InjectModel('Admin') private adminModel: Model<AdminModel>,
     private mailerService: MailerService,
+    private pagination: Pagination,
   ) {}
   async forgotPassword(email: string): Promise<any> {
     const userData = await this.clientModel.findOne({ email: email }).exec();
@@ -130,13 +131,24 @@ export class UserService {
     return resultCreate.save();
   }
   async getIndexLurah(page: number): Promise<AdminModel[]> {
-    const indexDataLurah = await Pagination.paginatedResult(
+    const indexDataLurah = await this.pagination.paginatedResult(
       this.adminModel,
       page,
       { role: 'Headman' },
     );
     return indexDataLurah;
   }
+
+  async getIndexComitte(page: number, lurahId: string): Promise<AdminModel[]> {
+    const getDataLurah = await this.getDetailAdmin(lurahId);
+    const indexDataComitte = await this.pagination.paginatedResult(
+      this.adminModel,
+      page,
+      { $and: [{ region: getDataLurah.region }, { role: 'Comitte' }] },
+    );
+    return indexDataComitte;
+  }
+
   async getDetailAdmin(adminId: string): Promise<AdminModel> {
     const resultDetail = await this.adminModel.findById(adminId).exec();
     return resultDetail;

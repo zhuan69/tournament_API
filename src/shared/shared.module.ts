@@ -8,6 +8,7 @@ import { teamSchema } from 'src/database/schemas/team.schema';
 import { CategoryService } from './service/category.service';
 import { categorySchema } from 'src/database/schemas/category.schema';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { HelpersModule } from 'src/helpers/helpers.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       }),
     }),
+    HelpersModule,
   ],
   providers: [UserService, TeamService, CategoryService],
   exports: [UserService, TeamService, CategoryService],

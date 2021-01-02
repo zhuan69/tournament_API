@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -84,5 +85,25 @@ export class AdminController {
     return res
       .status(HttpStatus.CREATED)
       .json({ message: 'Success Add Comitte', resultRegister });
+  }
+  @Get('/lurah')
+  @UseGuards(AuthGuard('jwt'))
+  async indexLurah(@Res() res, @Query('page', ParseIntPipe) page) {
+    const resultIndex = await this.userService.getIndexLurah(page);
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Berhasil dapat index lurah', resultIndex });
+  }
+  @Get('/comitte/:id')
+  @UseGuards(AuthGuard('jwt'))
+  async indexComitte(
+    @Res() res,
+    @Query('page', ParseIntPipe) page,
+    @Param('id') lurahId: string,
+  ) {
+    const resultIndex = await this.userService.getIndexComitte(page, lurahId);
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Berhasil dapat index panitia', resultIndex });
   }
 }

@@ -8,6 +8,7 @@ import { SharedModule } from './shared/shared.module';
 import { TeamModule } from './team/team.module';
 import { TournamentModule } from './tournament/tournament.module';
 import { CompetitionModule } from './competition/competition.module';
+import { HelpersModule } from './helpers/helpers.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CompetitionModule } from './competition/competition.module';
     TeamModule,
     TournamentModule,
     CompetitionModule,
+    HelpersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

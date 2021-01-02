@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TournamentModel } from 'src/database/interface/tournament.interface';
-import { Pagination } from 'src/helpers/pagination-helper';
+import { Pagination } from 'src/helpers/pagination-helper.service';
 import { Category, CategoryService } from 'src/shared/service/category.service';
 import { TeamService } from 'src/shared/service/team.service';
 import { UserService } from 'src/shared/service/user.service';
@@ -19,14 +19,27 @@ export class TournamentService {
     private categoryService: CategoryService,
     private userService: UserService,
     private teamService: TeamService,
+    private pagination: Pagination,
   ) {}
 
   async getIndexTournament(page: number): Promise<TournamentModel[]> {
-    const indexTournament = await Pagination.paginatedResult(
+    const indexTournament = await this.pagination.paginatedResult(
       this.tournamentModel,
       page,
     );
     return indexTournament;
+  }
+
+  async getIndexByCategory(
+    categoryId: string,
+    page: number,
+  ): Promise<TournamentModel[]> {
+    const getTournamentByCategory = await this.pagination.paginatedResult(
+      this.tournamentModel,
+      page,
+      { category: categoryId },
+    );
+    return getTournamentByCategory;
   }
 
   async getIndexTournamentByDistrict(
@@ -34,7 +47,7 @@ export class TournamentService {
     page: number,
   ): Promise<TournamentModel[]> {
     const getDataComitte = await this.userService.getDetailAdmin(comitteId);
-    const indexTournament = await Pagination.paginatedResult(
+    const indexTournament = await this.pagination.paginatedResult(
       this.tournamentModel,
       page,
       { subDistrict: getDataComitte.region.subDistrict },
@@ -134,15 +147,8 @@ export class TournamentService {
   }
 
   async getAvailableCategory(comitteId: string): Promise<any> {
-    const getListCategory = await this.categoryService.getIndexCategory();
     const resultFilter = await this.filterAvailableCategory(comitteId);
-    const arrayListCategory = getListCategory;
-    if (!resultFilter.exist) {
-      return arrayListCategory;
-    } else {
-      arrayListCategory.splice(resultFilter.index, 1);
-      return arrayListCategory;
-    }
+    return await resultFilter;
   }
 
   async getTournamentByCategory(
@@ -167,10 +173,15 @@ export class TournamentService {
     return resultWaitingList;
   }
 
-  async getSortTournamentAtoZ(page: number): Promise<any> {
-    const sortFromAZ = Pagination.paginatedResult(this.tournamentModel, page, {
-      name: 1,
-    });
+  async getSortTournamentAtoZ(page: number): Promise<TournamentModel[]> {
+    const sortFromAZ = this.pagination.paginatedResult(
+      this.tournamentModel,
+      page,
+      'sorting',
+      {
+        name: 1,
+      },
+    );
     return sortFromAZ;
   }
 
@@ -327,19 +338,15 @@ export class TournamentService {
     const indexDataTournament = await this.tournamentModel
       .find({ subDistrict: subDistrict })
       .exec();
-    let result = {};
-    for (let i = 0; i < indexDataCategory.length; i++) {
-      for (let j = 0; j < indexDataTournament.length; j++) {
-        const checkCategoryIsUsed =
-          indexDataTournament[j].category === indexDataCategory[i]._id;
-        if (checkCategoryIsUsed) {
-          result = {
-            index: i,
-            exist: true,
-          };
+    // eslint-disable-next-line prefer-const
+    let array = [];
+    indexDataCategory.map((category, indexCategory) => {
+      indexDataTournament.forEach((tournament: any, indexTournament) => {
+        if (category._id.toString() !== tournament.category._id.toString()) {
+          array.push(category);
         }
-      }
-    }
-    return result;
+      });
+    });
+    return array;
   }
 }

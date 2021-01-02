@@ -1,7 +1,9 @@
+import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 
+@Injectable()
 export class Pagination {
-  static async paginatedResult(
+  async paginatedResult(
     model: Model<any>,
     page: number,
     ...args
@@ -33,26 +35,33 @@ export class Pagination {
       currentPage: page,
       limit: limit,
     };
-    if (args.length === 1) {
-      result.data = await model
-        .find()
-        .sort(args[0])
-        .limit(limit)
-        .skip(startIndex)
-        .exec();
-    } else if (args.length === 2) {
-      result.data = await model
-        .find(args[0])
-        .sort(args[1])
-        .limit(limit)
-        .skip(startIndex)
-        .exec();
-    }
+    // if (args[0] === 'sorting') {
+    //   result.data = await this.sortingDocument(
+    //     model,
+    //     limit,
+    //     startIndex,
+    //     args[1],
+    //     args[2],
+    //   );
+    //   return result;
+    // }
     result.data = await model
-      .find()
+      .find(args[0])
       .limit(limit)
       .skip(startIndex)
       .exec();
     return result;
+  }
+  private async sortingDocument(
+    model: Model<any>,
+    limit: number,
+    startIndex: number,
+    ...args
+  ) {
+    return await model
+      .find(args[1])
+      .sort(args[0])
+      .limit(limit)
+      .skip(startIndex);
   }
 }
