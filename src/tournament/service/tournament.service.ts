@@ -170,7 +170,7 @@ export class TournamentService {
     const resultWaitingList = await this.tournamentModel
       .findById(tournamentId)
       .exec();
-    return resultWaitingList;
+    return resultWaitingList.waitingList;
   }
 
   async getSortTournamentAtoZ(page: number): Promise<TournamentModel[]> {
