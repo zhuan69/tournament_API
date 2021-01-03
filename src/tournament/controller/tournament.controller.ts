@@ -98,7 +98,7 @@ export class TournamentController {
   }
 
   @Get('waitinglist/:tournamentId')
-  //@UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async getWaitingListParticipant(
     @Res() res,
     @Param('tournamentId') tournamentId,
