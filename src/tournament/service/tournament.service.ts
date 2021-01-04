@@ -148,7 +148,7 @@ export class TournamentService {
 
   async getAvailableCategory(comitteId: string): Promise<any> {
     const resultFilter = await this.filterAvailableCategory(comitteId);
-    return await resultFilter;
+    return resultFilter;
   }
 
   async getTournamentByCategory(
@@ -338,15 +338,13 @@ export class TournamentService {
     const indexDataTournament = await this.tournamentModel
       .find({ subDistrict: subDistrict })
       .exec();
-    // eslint-disable-next-line prefer-const
-    let array = [];
-    indexDataCategory.map(category => {
+    indexDataCategory.forEach((category: any, indexNumberCategory: any) => {
       indexDataTournament.forEach((tournament: any) => {
-        if (category._id.toString() !== tournament.category._id.toString()) {
-          array.push(category);
+        if (category._id.toString() === tournament.category._id.toString()) {
+          indexDataCategory.splice(indexNumberCategory, 1);
         }
       });
     });
-    return array;
+    return indexDataCategory;
   }
 }
