@@ -145,14 +145,14 @@ export class TournamentController {
   }
 
   @Get('category/:comitteId')
-  //@UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async getAvailableCategory(@Res() res, @Param('comitteId') comitteId) {
-    const resultAvailavleCategory = await this.tournamentService.getAvailableCategory(
+    const resultAvailableCategory = await this.tournamentService.getAvailableCategory(
       comitteId,
     );
     return res.status(HttpStatus.OK).json({
       message: 'Berhasil dapat data category yang tersedia',
-      resultAvailavleCategory,
+      resultAvailableCategory,
     });
   }
 

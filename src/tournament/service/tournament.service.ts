@@ -340,8 +340,8 @@ export class TournamentService {
       .exec();
     // eslint-disable-next-line prefer-const
     let array = [];
-    indexDataCategory.map((category, indexCategory) => {
-      indexDataTournament.forEach((tournament: any, indexTournament) => {
+    indexDataCategory.map(category => {
+      indexDataTournament.forEach((tournament: any) => {
         if (category._id.toString() !== tournament.category._id.toString()) {
           array.push(category);
         }
