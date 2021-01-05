@@ -12,7 +12,6 @@ export const teamSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Client',
-        maxlength: 5,
         autopopulate: true,
       },
     ],

@@ -5,12 +5,12 @@ export interface ClientRegister {
   username: string;
   oldPassword?: string;
   password: string;
-  birthday: Date;
+  birthday: string;
   phone: number;
   team?: string;
 }
 
-enum Role {
+export enum Role {
   admin = 'Admin',
   headman = 'Headman',
   comitte = 'Comitte',

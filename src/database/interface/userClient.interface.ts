@@ -12,7 +12,7 @@ export interface ClientModel extends Document {
   email: string;
   username: string;
   password: string;
-  birthday: Date;
+  birthday: string;
   phone: number;
   resetPasswordToken?: string;
   team?: string;

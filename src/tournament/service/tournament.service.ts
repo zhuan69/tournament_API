@@ -170,7 +170,7 @@ export class TournamentService {
     const resultWaitingList = await this.tournamentModel
       .findById(tournamentId)
       .exec();
-    return resultWaitingList.waitingList;
+    return resultWaitingList;
   }
 
   async getSortTournamentAtoZ(page: number): Promise<TournamentModel[]> {
@@ -340,7 +340,9 @@ export class TournamentService {
       .exec();
     indexDataCategory.forEach((category: any, indexNumberCategory: any) => {
       indexDataTournament.forEach((tournament: any) => {
-        if (category._id.toString() === tournament.category._id.toString()) {
+        const checkIfCategoryUsed =
+          category._id.toString() === tournament.category._id.toString();
+        if (checkIfCategoryUsed) {
           indexDataCategory.splice(indexNumberCategory, 1);
         }
       });

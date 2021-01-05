@@ -1,6 +1,6 @@
 import { ApprovalStatus } from 'src/shared/DTO/approval.enum';
 
-enum tournamentType {
+export enum tournamentType {
   FreeForAll = 'FreeForAll',
   Eliminination = 'Elimination',
 }

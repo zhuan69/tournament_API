@@ -1,5 +1,4 @@
-import { Controller, Body, Post, Get, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Body, Post } from '@nestjs/common';
 import { AuthLogin } from 'src/shared/DTO/AuthLogin.dto';
 import { UserService } from 'src/shared/service/user.service';
 import { Payload } from '../interface/payload.interface';
@@ -11,13 +10,6 @@ export class AuthController {
     private userService: UserService,
     private authService: AuthService,
   ) {}
-  //Test Purpose
-  @Get()
-  @UseGuards(AuthGuard('jwt'))
-  async testJwT() {
-    return { works: 'its working yeay!' };
-  }
-
   @Post('client/login')
   async clientLogin(@Body() loginBody: AuthLogin) {
     const userLogin = await this.userService.clientLoginValidation(loginBody);
