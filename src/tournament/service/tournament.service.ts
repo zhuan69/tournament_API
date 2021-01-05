@@ -107,6 +107,7 @@ export class TournamentService {
     tournamentId: string,
     userId: string,
   ): Promise<any> {
+    await this.filterDuplicateSoloRegister(userId);
     const resultRegisterSolo = await this.tournamentModel
       .findByIdAndUpdate(
         tournamentId,
@@ -114,7 +115,6 @@ export class TournamentService {
         { upsert: true },
       )
       .exec();
-    await this.filterDuplicateSoloRegister(userId);
     return resultRegisterSolo;
   }
 

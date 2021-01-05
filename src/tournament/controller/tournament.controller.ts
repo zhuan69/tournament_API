@@ -70,7 +70,7 @@ export class TournamentController {
   }
 
   @Patch(':tournamentId/register/:userId')
-  //@UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async paricipateTournament(@Res() res, @Req() req) {
     const { tournamentId, userId } = req.params;
     const resultParticipate = await this.tournamentService.registerAsSoloTournament(
