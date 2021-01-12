@@ -66,11 +66,6 @@ userClientSchema.pre<ClientModel>('save', async function(next) {
   this.password = hashing;
   next();
 });
-userClientSchema.pre<ClientModel>('findByIdAndUpdate', async function(next) {
-  const hasing = await hashingPassword(12, this.password);
-  this.password = hasing;
-  next();
-});
 async function hashingPassword(saltNumber?: number, password?: string) {
   const hashing = await hash(password, saltNumber);
   return hashing;

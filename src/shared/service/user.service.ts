@@ -6,7 +6,7 @@ import {
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 
 import { AdminModel } from 'src/database/interface/userAdmin.interface';
@@ -53,29 +53,17 @@ export class UserService {
     userId: string,
     userUpdate: ClientRegister,
   ): Promise<ClientModel> {
-    const {
-      firstName,
-      lastName,
-      email,
-      username,
-      oldPassword,
-      password,
-      birthday,
-      team,
-    } = userUpdate;
+    const { firstName, lastName, oldPassword, password } = userUpdate;
     await this.oldPasswordVerify(userId, oldPassword);
+    const hashing = await hash(password, 12);
     const updateUserInfo = await this.clientModel
       .findByIdAndUpdate(
         userId,
         {
           $set: {
-            firstName,
-            lastName,
-            email,
-            username,
-            password,
-            birthday,
-            team,
+            firstName: firstName,
+            lastName: lastName,
+            password: hashing,
           },
         },
         { upsert: true },
